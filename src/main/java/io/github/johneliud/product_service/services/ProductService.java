@@ -97,6 +97,17 @@ public class ProductService {
         log.info("Product deleted successfully: {}", id);
     }
 
+    public java.util.List<ProductResponse> getSellerProducts(String userId) {
+        log.info("Fetching products for userId: {}", userId);
+        
+        java.util.List<Product> products = productRepository.findByUserId(userId);
+        
+        log.info("Retrieved {} products for userId: {}", products.size(), userId);
+        return products.stream()
+            .map(this::toProductResponse)
+            .collect(java.util.stream.Collectors.toList());
+    }
+
     private ProductResponse toProductResponse(Product product) {
         return new ProductResponse(
             product.getId(),
