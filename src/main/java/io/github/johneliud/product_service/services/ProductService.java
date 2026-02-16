@@ -30,6 +30,30 @@ public class ProductService {
         return toProductResponse(savedProduct);
     }
 
+    public java.util.List<ProductResponse> getAllProducts() {
+        log.info("Fetching all products");
+        
+        java.util.List<Product> products = productRepository.findAll();
+        
+        log.info("Retrieved {} products", products.size());
+        return products.stream()
+            .map(this::toProductResponse)
+            .collect(java.util.stream.Collectors.toList());
+    }
+
+    public ProductResponse getProductById(String id) {
+        log.info("Fetching product by ID: {}", id);
+        
+        Product product = productRepository.findById(id)
+            .orElseThrow(() -> {
+                log.warn("Product not found with ID: {}", id);
+                return new IllegalArgumentException("Product not found");
+            });
+        
+        log.info("Product retrieved successfully: {}", id);
+        return toProductResponse(product);
+    }
+
     private ProductResponse toProductResponse(Product product) {
         return new ProductResponse(
             product.getId(),
