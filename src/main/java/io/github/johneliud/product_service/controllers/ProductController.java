@@ -71,4 +71,19 @@ public class ProductController {
         log.info("PUT /api/products/{} - Product updated successfully", id);
         return ResponseEntity.ok(new ApiResponse<>(true, "Product updated successfully", productResponse));
     }
+
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('SELLER')")
+    public ResponseEntity<ApiResponse<Void>> deleteProduct(
+            @PathVariable String id,
+            Authentication authentication) {
+        
+        String userId = (String) authentication.getPrincipal();
+        log.info("DELETE /api/products/{} - Delete product request by userId: {}", id, userId);
+        
+        productService.deleteProduct(id, userId);
+        
+        log.info("DELETE /api/products/{} - Product deleted successfully", id);
+        return ResponseEntity.ok(new ApiResponse<>(true, "Product deleted successfully", null));
+    }
 }
