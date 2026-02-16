@@ -86,4 +86,18 @@ public class ProductController {
         log.info("DELETE /api/products/{} - Product deleted successfully", id);
         return ResponseEntity.ok(new ApiResponse<>(true, "Product deleted successfully", null));
     }
+
+    @GetMapping("/my-products")
+    @PreAuthorize("hasRole('SELLER')")
+    public ResponseEntity<ApiResponse<java.util.List<ProductResponse>>> getSellerProducts(
+            Authentication authentication) {
+        
+        String userId = (String) authentication.getPrincipal();
+        log.info("GET /api/products/my-products - Get seller products request by userId: {}", userId);
+        
+        java.util.List<ProductResponse> products = productService.getSellerProducts(userId);
+        
+        log.info("GET /api/products/my-products - Retrieved {} products", products.size());
+        return ResponseEntity.ok(new ApiResponse<>(true, "Products retrieved successfully", products));
+    }
 }
