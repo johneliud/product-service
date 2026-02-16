@@ -35,4 +35,24 @@ public class ProductController {
         return ResponseEntity.status(HttpStatus.CREATED)
             .body(new ApiResponse<>(true, "Product created successfully", productResponse));
     }
+
+    @GetMapping
+    public ResponseEntity<ApiResponse<java.util.List<ProductResponse>>> getAllProducts() {
+        log.info("GET /api/products - Get all products request");
+        
+        java.util.List<ProductResponse> products = productService.getAllProducts();
+        
+        log.info("GET /api/products - Retrieved {} products", products.size());
+        return ResponseEntity.ok(new ApiResponse<>(true, "Products retrieved successfully", products));
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<ApiResponse<ProductResponse>> getProductById(@PathVariable String id) {
+        log.info("GET /api/products/{} - Get product by ID request", id);
+        
+        ProductResponse productResponse = productService.getProductById(id);
+        
+        log.info("GET /api/products/{} - Product retrieved successfully", id);
+        return ResponseEntity.ok(new ApiResponse<>(true, "Product retrieved successfully", productResponse));
+    }
 }
