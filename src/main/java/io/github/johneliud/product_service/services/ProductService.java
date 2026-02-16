@@ -97,6 +97,69 @@ public class ProductService {
         log.info("Product deleted successfully: {}", id);
     }
 
+    public java.util.List<ProductResponse> getSellerProducts(String userId) {
+        log.info("Fetching products for userId: {}", userId);
+        
+        java.util.List<Product> products = productRepository.findByUserId(userId);
+        
+        log.info("Retrieved {} products for userId: {}", products.size(), userId);
+        return products.stream()
+            .map(this::toProductResponse)
+            .collect(java.util.stream.Collectors.toList());
+    }
+
+    public io.github.johneliud.product_service.dto.PagedResponse<ProductResponse> getSellerProductsPaged(
+            String userId, 
+            int page, 
+            int size, 
+            String search, 
+            java.math.BigDecimal minPrice, 
+            java.math.BigDecimal maxPrice, 
+            String sortBy, 
+            String sortDir) {
+        
+        log.info("Fetching paged products for userId: {}, page: {}, size: {}, search: {}, minPrice: {}, maxPrice: {}, sortBy: {}, sortDir: {}", 
+                userId, page, size, search, minPrice, maxPrice, sortBy, sortDir);
+        
+        org.springframework.data.domain.Sort.Direction direction = "desc".equalsIgnoreCase(sortDir) 
+            ? org.springframework.data.domain.Sort.Direction.DESC 
+            : org.springframework.data.domain.Sort.Direction.ASC;
+        
+        org.springframework.data.domain.Pageable pageable = org.springframework.data.domain.PageRequest.of(
+            page, size, org.springframework.data.domain.Sort.by(direction, sortBy)
+        );
+        
+        org.springframework.data.domain.Page<Product> productPage;
+        
+        if (search != null && !search.isBlank() && minPrice != null && maxPrice != null) {
+            productPage = productRepository.findByUserIdAndNameContainingIgnoreCaseAndPriceBetween(
+                userId, search, minPrice, maxPrice, pageable
+            );
+        } else if (search != null && !search.isBlank()) {
+            productPage = productRepository.findByUserIdAndNameContainingIgnoreCase(userId, search, pageable);
+        } else if (minPrice != null && maxPrice != null) {
+            productPage = productRepository.findByUserIdAndPriceBetween(userId, minPrice, maxPrice, pageable);
+        } else {
+            productPage = productRepository.findByUserId(userId, pageable);
+        }
+        
+        java.util.List<ProductResponse> content = productPage.getContent().stream()
+            .map(this::toProductResponse)
+            .collect(java.util.stream.Collectors.toList());
+        
+        log.info("Retrieved {} products (page {}/{}) for userId: {}", 
+                content.size(), page + 1, productPage.getTotalPages(), userId);
+        
+        return new io.github.johneliud.product_service.dto.PagedResponse<>(
+            content,
+            productPage.getNumber(),
+            productPage.getSize(),
+            productPage.getTotalElements(),
+            productPage.getTotalPages(),
+            productPage.isLast()
+        );
+    }
+
     private ProductResponse toProductResponse(Product product) {
         return new ProductResponse(
             product.getId(),
