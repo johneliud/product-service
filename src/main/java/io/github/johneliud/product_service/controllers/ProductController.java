@@ -55,4 +55,20 @@ public class ProductController {
         log.info("GET /api/products/{} - Product retrieved successfully", id);
         return ResponseEntity.ok(new ApiResponse<>(true, "Product retrieved successfully", productResponse));
     }
+
+    @PutMapping("/{id}")
+    @PreAuthorize("hasRole('SELLER')")
+    public ResponseEntity<ApiResponse<ProductResponse>> updateProduct(
+            @PathVariable String id,
+            @Valid @RequestBody ProductRequest request,
+            Authentication authentication) {
+        
+        String userId = (String) authentication.getPrincipal();
+        log.info("PUT /api/products/{} - Update product request by userId: {}", id, userId);
+        
+        ProductResponse productResponse = productService.updateProduct(id, request, userId);
+        
+        log.info("PUT /api/products/{} - Product updated successfully", id);
+        return ResponseEntity.ok(new ApiResponse<>(true, "Product updated successfully", productResponse));
+    }
 }
