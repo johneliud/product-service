@@ -54,6 +54,31 @@ public class ProductService {
         return toProductResponse(product);
     }
 
+    public ProductResponse updateProduct(String id, ProductRequest request, String userId) {
+        log.info("Attempting to update product ID: {} by userId: {}", id, userId);
+        
+        Product product = productRepository.findById(id)
+            .orElseThrow(() -> {
+                log.warn("Product update failed: Product not found - {}", id);
+                return new IllegalArgumentException("Product not found");
+            });
+        
+        if (!product.getUserId().equals(userId)) {
+            log.warn("Product update failed: User {} does not own product {}", userId, id);
+            throw new IllegalArgumentException("You do not have permission to update this product");
+        }
+        
+        product.setName(request.getName());
+        product.setDescription(request.getDescription());
+        product.setPrice(request.getPrice());
+        product.setQuantity(request.getQuantity());
+        
+        Product updatedProduct = productRepository.save(product);
+        log.info("Product updated successfully: {}", id);
+        
+        return toProductResponse(updatedProduct);
+    }
+
     private ProductResponse toProductResponse(Product product) {
         return new ProductResponse(
             product.getId(),
