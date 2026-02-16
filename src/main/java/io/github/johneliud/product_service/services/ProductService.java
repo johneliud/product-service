@@ -79,6 +79,24 @@ public class ProductService {
         return toProductResponse(updatedProduct);
     }
 
+    public void deleteProduct(String id, String userId) {
+        log.info("Attempting to delete product ID: {} by userId: {}", id, userId);
+        
+        Product product = productRepository.findById(id)
+            .orElseThrow(() -> {
+                log.warn("Product deletion failed: Product not found - {}", id);
+                return new IllegalArgumentException("Product not found");
+            });
+        
+        if (!product.getUserId().equals(userId)) {
+            log.warn("Product deletion failed: User {} does not own product {}", userId, id);
+            throw new IllegalArgumentException("You do not have permission to delete this product");
+        }
+        
+        productRepository.deleteById(id);
+        log.info("Product deleted successfully: {}", id);
+    }
+
     private ProductResponse toProductResponse(Product product) {
         return new ProductResponse(
             product.getId(),
