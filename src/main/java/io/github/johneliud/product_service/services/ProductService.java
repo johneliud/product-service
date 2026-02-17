@@ -2,10 +2,12 @@ package io.github.johneliud.product_service.services;
 
 import io.github.johneliud.product_service.dto.ProductRequest;
 import io.github.johneliud.product_service.dto.ProductResponse;
+import io.github.johneliud.product_service.event.ProductDeletedEvent;
 import io.github.johneliud.product_service.models.Product;
 import io.github.johneliud.product_service.repositories.ProductRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -13,6 +15,7 @@ import org.springframework.stereotype.Service;
 @Slf4j
 public class ProductService {
     private final ProductRepository productRepository;
+    private final KafkaTemplate<String, ProductDeletedEvent> kafkaTemplate;
 
     public ProductResponse createProduct(ProductRequest request, String userId) {
         log.info("Attempting to create product for userId: {}", userId);
@@ -95,6 +98,11 @@ public class ProductService {
         
         productRepository.deleteById(id);
         log.info("Product deleted successfully: {}", id);
+        
+        // Publish product deleted event
+        ProductDeletedEvent event = new ProductDeletedEvent(id, userId);
+        kafkaTemplate.send("product-deleted", event);
+        log.info("Published product-deleted event for productId: {}", id);
     }
 
     public java.util.List<ProductResponse> getSellerProducts(String userId) {
