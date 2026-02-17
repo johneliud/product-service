@@ -9,8 +9,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -21,12 +19,15 @@ public class ProductController {
     private final ProductService productService;
 
     @PostMapping
-    @PreAuthorize("hasRole('SELLER')")
     public ResponseEntity<ApiResponse<ProductResponse>> createProduct(
             @Valid @RequestBody ProductRequest request,
-            Authentication authentication) {
+            @RequestHeader("X-User-Id") String userId,
+            @RequestHeader("X-User-Role") String role) {
         
-        String userId = (String) authentication.getPrincipal();
+        if (!role.equals("ROLE_SELLER")) {
+            throw new IllegalArgumentException("Only sellers can create products");
+        }
+        
         log.info("POST /api/products - Create product request by userId: {}", userId);
         
         ProductResponse productResponse = productService.createProduct(request, userId);
@@ -57,13 +58,16 @@ public class ProductController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('SELLER')")
     public ResponseEntity<ApiResponse<ProductResponse>> updateProduct(
             @PathVariable String id,
             @Valid @RequestBody ProductRequest request,
-            Authentication authentication) {
+            @RequestHeader("X-User-Id") String userId,
+            @RequestHeader("X-User-Role") String role) {
         
-        String userId = (String) authentication.getPrincipal();
+        if (!role.equals("ROLE_SELLER")) {
+            throw new IllegalArgumentException("Only sellers can update products");
+        }
+        
         log.info("PUT /api/products/{} - Update product request by userId: {}", id, userId);
         
         ProductResponse productResponse = productService.updateProduct(id, request, userId);
@@ -73,12 +77,15 @@ public class ProductController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('SELLER')")
     public ResponseEntity<ApiResponse<Void>> deleteProduct(
             @PathVariable String id,
-            Authentication authentication) {
+            @RequestHeader("X-User-Id") String userId,
+            @RequestHeader("X-User-Role") String role) {
         
-        String userId = (String) authentication.getPrincipal();
+        if (!role.equals("ROLE_SELLER")) {
+            throw new IllegalArgumentException("Only sellers can delete products");
+        }
+        
         log.info("DELETE /api/products/{} - Delete product request by userId: {}", id, userId);
         
         productService.deleteProduct(id, userId);
@@ -88,7 +95,6 @@ public class ProductController {
     }
 
     @GetMapping("/my-products")
-    @PreAuthorize("hasRole('SELLER')")
     public ResponseEntity<ApiResponse<io.github.johneliud.product_service.dto.PagedResponse<ProductResponse>>> getSellerProducts(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
@@ -97,9 +103,13 @@ public class ProductController {
             @RequestParam(required = false) java.math.BigDecimal maxPrice,
             @RequestParam(defaultValue = "name") String sortBy,
             @RequestParam(defaultValue = "asc") String sortDir,
-            Authentication authentication) {
+            @RequestHeader("X-User-Id") String userId,
+            @RequestHeader("X-User-Role") String role) {
         
-        String userId = (String) authentication.getPrincipal();
+        if (!role.equals("ROLE_SELLER")) {
+            throw new IllegalArgumentException("Only sellers can access this endpoint");
+        }
+        
         log.info("GET /api/products/my-products - Get seller products request by userId: {}", userId);
         
         io.github.johneliud.product_service.dto.PagedResponse<ProductResponse> products = 
