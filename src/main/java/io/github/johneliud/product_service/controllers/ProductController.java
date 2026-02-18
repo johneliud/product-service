@@ -38,12 +38,21 @@ public class ProductController {
     }
 
     @GetMapping
-    public ResponseEntity<ApiResponse<java.util.List<ProductResponse>>> getAllProducts() {
-        log.info("GET /api/products - Get all products request");
+    public ResponseEntity<ApiResponse<io.github.johneliud.product_service.dto.PagedResponse<ProductResponse>>> getAllProducts(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) java.math.BigDecimal minPrice,
+            @RequestParam(required = false) java.math.BigDecimal maxPrice,
+            @RequestParam(defaultValue = "name") String sortBy,
+            @RequestParam(defaultValue = "asc") String sortDir) {
         
-        java.util.List<ProductResponse> products = productService.getAllProducts();
+        log.info("GET /api/products - Get all products request with filters");
         
-        log.info("GET /api/products - Retrieved {} products", products.size());
+        io.github.johneliud.product_service.dto.PagedResponse<ProductResponse> products = 
+            productService.getAllProductsPaged(page, size, search, minPrice, maxPrice, sortBy, sortDir);
+        
+        log.info("GET /api/products - Retrieved {} products", products.getContent().size());
         return ResponseEntity.ok(new ApiResponse<>(true, "Products retrieved successfully", products));
     }
 

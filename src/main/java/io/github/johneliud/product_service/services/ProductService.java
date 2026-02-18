@@ -44,6 +44,57 @@ public class ProductService {
             .collect(java.util.stream.Collectors.toList());
     }
 
+    public io.github.johneliud.product_service.dto.PagedResponse<ProductResponse> getAllProductsPaged(
+            int page, 
+            int size, 
+            String search, 
+            java.math.BigDecimal minPrice, 
+            java.math.BigDecimal maxPrice, 
+            String sortBy, 
+            String sortDir) {
+        
+        log.info("Fetching paged products - page: {}, size: {}, search: {}, minPrice: {}, maxPrice: {}, sortBy: {}, sortDir: {}", 
+                page, size, search, minPrice, maxPrice, sortBy, sortDir);
+        
+        org.springframework.data.domain.Sort.Direction direction = "desc".equalsIgnoreCase(sortDir) 
+            ? org.springframework.data.domain.Sort.Direction.DESC 
+            : org.springframework.data.domain.Sort.Direction.ASC;
+        
+        org.springframework.data.domain.Pageable pageable = org.springframework.data.domain.PageRequest.of(
+            page, size, org.springframework.data.domain.Sort.by(direction, sortBy)
+        );
+        
+        org.springframework.data.domain.Page<Product> productPage;
+        
+        if (search != null && !search.isBlank() && minPrice != null && maxPrice != null) {
+            productPage = productRepository.findByNameContainingIgnoreCaseAndPriceBetween(
+                search, minPrice, maxPrice, pageable
+            );
+        } else if (search != null && !search.isBlank()) {
+            productPage = productRepository.findByNameContainingIgnoreCase(search, pageable);
+        } else if (minPrice != null && maxPrice != null) {
+            productPage = productRepository.findByPriceBetween(minPrice, maxPrice, pageable);
+        } else {
+            productPage = productRepository.findAll(pageable);
+        }
+        
+        java.util.List<ProductResponse> content = productPage.getContent().stream()
+            .map(this::toProductResponse)
+            .collect(java.util.stream.Collectors.toList());
+        
+        log.info("Retrieved {} products (page {}/{})", 
+                content.size(), page + 1, productPage.getTotalPages());
+        
+        return new io.github.johneliud.product_service.dto.PagedResponse<>(
+            content,
+            productPage.getNumber(),
+            productPage.getSize(),
+            productPage.getTotalElements(),
+            productPage.getTotalPages(),
+            productPage.isLast()
+        );
+    }
+
     public ProductResponse getProductById(String id) {
         log.info("Fetching product by ID: {}", id);
         
