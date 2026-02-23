@@ -150,10 +150,14 @@ public class ProductService {
         productRepository.deleteById(id);
         log.info("Product deleted successfully: {}", id);
         
-        // Publish product deleted event
-        ProductDeletedEvent event = new ProductDeletedEvent(id, userId);
-        kafkaTemplate.send("product-deleted", event);
-        log.info("Published product-deleted event for productId: {}", id);
+        // Publish product deleted event and  do not fail the delete operation if Kafka publish fails
+        try {
+            ProductDeletedEvent event = new ProductDeletedEvent(id, userId);
+            kafkaTemplate.send("product-deleted", event);
+            log.info("Published product-deleted event for productId: {}", id);
+        } catch (Exception e) {
+            log.error("Failed to publish product-deleted event for productId: {}, error: {}", id, e.getMessage());
+        }
     }
 
     public java.util.List<ProductResponse> getSellerProducts(String userId) {

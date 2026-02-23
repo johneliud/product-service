@@ -30,7 +30,7 @@ public class KafkaProducerConfig {
     }
 
     @Bean
-    public KafkaTemplate<String, ProductDeletedEvent> kafkaTemplate() {
-        return new KafkaTemplate<>(producerFactory());
+    public KafkaTemplate<String, ProductDeletedEvent> kafkaTemplate(ProducerFactory<String, ProductDeletedEvent> producerFactory) {
+        return new KafkaTemplate<>(producerFactory);
     }
 }
