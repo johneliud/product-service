@@ -21,14 +21,19 @@ public class ProductController {
     @PostMapping
     public ResponseEntity<ApiResponse<ProductResponse>> createProduct(
             @Valid @RequestBody ProductRequest request,
-            @RequestHeader("X-User-Id") String userId,
-            @RequestHeader("X-User-Role") String role) {
+            @RequestHeader(value = "X-User-Id", required = false) String userId,
+            @RequestHeader(value = "X-User-Role", required = false) String role) {
         
-        if (!role.equals("ROLE_SELLER")) {
-            throw new IllegalArgumentException("Only sellers can create products");
+        log.info("POST /api/products - Create product request - userId: {}, role: {}, request: {}", userId, role, request);
+        
+        if (userId == null || role == null) {
+            log.error("Missing required headers - X-User-Id: {}, X-User-Role: {}", userId, role);
+            throw new IllegalArgumentException("Authentication required");
         }
         
-        log.info("POST /api/products - Create product request by userId: {}", userId);
+        if (!role.equals("SELLER")) {
+            throw new IllegalArgumentException("Only sellers can create products");
+        }
         
         ProductResponse productResponse = productService.createProduct(request, userId);
         
@@ -73,7 +78,7 @@ public class ProductController {
             @RequestHeader("X-User-Id") String userId,
             @RequestHeader("X-User-Role") String role) {
         
-        if (!role.equals("ROLE_SELLER")) {
+        if (!role.equals("SELLER")) {
             throw new IllegalArgumentException("Only sellers can update products");
         }
         
@@ -91,7 +96,7 @@ public class ProductController {
             @RequestHeader("X-User-Id") String userId,
             @RequestHeader("X-User-Role") String role) {
         
-        if (!role.equals("ROLE_SELLER")) {
+        if (!role.equals("SELLER")) {
             throw new IllegalArgumentException("Only sellers can delete products");
         }
         
@@ -115,7 +120,7 @@ public class ProductController {
             @RequestHeader("X-User-Id") String userId,
             @RequestHeader("X-User-Role") String role) {
         
-        if (!role.equals("ROLE_SELLER")) {
+        if (!role.equals("SELLER")) {
             throw new IllegalArgumentException("Only sellers can access this endpoint");
         }
         
