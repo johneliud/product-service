@@ -19,5 +19,9 @@ public interface ProductRepository extends MongoRepository<Product, String> {
     
     Page<Product> findByNameContainingIgnoreCase(String name, Pageable pageable);
     Page<Product> findByPriceBetween(BigDecimal minPrice, BigDecimal maxPrice, Pageable pageable);
+    Page<Product> findByPriceLessThanEqual(BigDecimal maxPrice, Pageable pageable);
+    Page<Product> findByPriceGreaterThanEqual(BigDecimal minPrice, Pageable pageable);
     Page<Product> findByNameContainingIgnoreCaseAndPriceBetween(String name, BigDecimal minPrice, BigDecimal maxPrice, Pageable pageable);
+    Page<Product> findByNameContainingIgnoreCaseAndPriceLessThanEqual(String name, BigDecimal maxPrice, Pageable pageable);
+    Page<Product> findByNameContainingIgnoreCaseAndPriceGreaterThanEqual(String name, BigDecimal minPrice, Pageable pageable);
 }
