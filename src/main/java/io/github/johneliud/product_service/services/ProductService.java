@@ -70,10 +70,22 @@ public class ProductService {
             productPage = productRepository.findByNameContainingIgnoreCaseAndPriceBetween(
                 search, minPrice, maxPrice, pageable
             );
+        } else if (search != null && !search.isBlank() && minPrice != null) {
+            productPage = productRepository.findByNameContainingIgnoreCaseAndPriceGreaterThanEqual(
+                search, minPrice, pageable
+            );
+        } else if (search != null && !search.isBlank() && maxPrice != null) {
+            productPage = productRepository.findByNameContainingIgnoreCaseAndPriceLessThanEqual(
+                search, maxPrice, pageable
+            );
         } else if (search != null && !search.isBlank()) {
             productPage = productRepository.findByNameContainingIgnoreCase(search, pageable);
         } else if (minPrice != null && maxPrice != null) {
             productPage = productRepository.findByPriceBetween(minPrice, maxPrice, pageable);
+        } else if (minPrice != null) {
+            productPage = productRepository.findByPriceGreaterThanEqual(minPrice, pageable);
+        } else if (maxPrice != null) {
+            productPage = productRepository.findByPriceLessThanEqual(maxPrice, pageable);
         } else {
             productPage = productRepository.findAll(pageable);
         }
