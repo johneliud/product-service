@@ -113,6 +113,8 @@ Content-Type: application/json
 DELETE /api/products/{id}
 ```
 
+This triggers a Kafka event that notifies Media Service to delete associated media files.
+
 ## Data Model
 
 ### Product
@@ -169,8 +171,31 @@ Examples:
 
 - Spring Boot 3.x
 - Spring Data MongoDB
+- Spring Kafka
 - Lombok
 - Validation API
+
+## Kafka Integration
+
+### Producer Configuration
+Publishes events to Kafka when products are deleted.
+
+**Topic**: `product-deleted`
+
+**Event Structure**:
+```json
+{
+  "productId": "string",
+  "timestamp": "ISO-8601 datetime"
+}
+```
+
+### Configuration
+```properties
+spring.kafka.bootstrap-servers=localhost:9092
+spring.kafka.producer.key-serializer=org.apache.kafka.common.serialization.StringSerializer
+spring.kafka.producer.value-serializer=org.springframework.kafka.support.serializer.JsonSerializer
+```
 
 ## Error Responses
 
