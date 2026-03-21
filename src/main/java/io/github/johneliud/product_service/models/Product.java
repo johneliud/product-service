@@ -27,4 +27,6 @@ public class Product {
     
     @Indexed
     private String userId;
+
+    private String category;
 }
