@@ -26,4 +26,7 @@ public class ProductRequest {
     @NotNull(message = "Quantity is required")
     @Min(value = 0, message = "Quantity must be non-negative")
     private Integer quantity;
+
+    @Size(max = 50, message = "Category must not exceed 50 characters")
+    private String category;
 }
