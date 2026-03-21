@@ -50,13 +50,17 @@ public class ProductController {
             @RequestParam(required = false) java.math.BigDecimal minPrice,
             @RequestParam(required = false) java.math.BigDecimal maxPrice,
             @RequestParam(defaultValue = "name") String sortBy,
-            @RequestParam(defaultValue = "asc") String sortDir) {
-        
+            @RequestParam(defaultValue = "asc") String sortDir,
+            @RequestParam(required = false) String category,
+            @RequestParam(defaultValue = "false") boolean availableOnly,
+            @RequestParam(required = false) String sellerId) {
+
         log.info("GET /api/products - Get all products request with filters");
-        
-        io.github.johneliud.product_service.dto.PagedResponse<ProductResponse> products = 
-            productService.getAllProductsPaged(page, size, search, minPrice, maxPrice, sortBy, sortDir);
-        
+
+        io.github.johneliud.product_service.dto.PagedResponse<ProductResponse> products =
+            productService.getAllProductsPaged(page, size, search, minPrice, maxPrice, sortBy, sortDir,
+                    category, availableOnly, sellerId);
+
         log.info("GET /api/products - Retrieved {} products", products.getContent().size());
         return ResponseEntity.ok(new ApiResponse<>(true, "Products retrieved successfully", products));
     }
@@ -117,18 +121,21 @@ public class ProductController {
             @RequestParam(required = false) java.math.BigDecimal maxPrice,
             @RequestParam(defaultValue = "name") String sortBy,
             @RequestParam(defaultValue = "asc") String sortDir,
+            @RequestParam(required = false) String category,
+            @RequestParam(defaultValue = "false") boolean availableOnly,
             @RequestHeader("X-User-Id") String userId,
             @RequestHeader("X-User-Role") String role) {
-        
+
         if (!role.equals("SELLER")) {
             throw new IllegalArgumentException("Only sellers can access this endpoint");
         }
-        
+
         log.info("GET /api/products/my-products - Get seller products request by userId: {}", userId);
-        
-        io.github.johneliud.product_service.dto.PagedResponse<ProductResponse> products = 
-            productService.getSellerProductsPaged(userId, page, size, search, minPrice, maxPrice, sortBy, sortDir);
-        
+
+        io.github.johneliud.product_service.dto.PagedResponse<ProductResponse> products =
+            productService.getSellerProductsPaged(userId, page, size, search, minPrice, maxPrice, sortBy, sortDir,
+                    category, availableOnly);
+
         log.info("GET /api/products/my-products - Retrieved {} products", products.getContent().size());
         return ResponseEntity.ok(new ApiResponse<>(true, "Products retrieved successfully", products));
     }
