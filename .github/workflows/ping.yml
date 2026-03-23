@@ -1,0 +1,14 @@
+name: Ping Service
+
+on:
+  schedule:
+    - cron: '*/10 * * * *'
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Ping product-service
+        run: curl -s -o /dev/null -w "%{http_code}" https://product-service-8o28.onrender.com/api/health || true
