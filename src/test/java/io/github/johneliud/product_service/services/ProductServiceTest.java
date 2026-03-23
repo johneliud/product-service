@@ -15,6 +15,7 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 import java.math.BigDecimal;
 import java.util.Optional;
 
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
@@ -148,5 +149,33 @@ class ProductServiceTest {
             productService.deleteProduct("prod123", "seller123");
         });
         assertEquals("Product not found", exception.getMessage());
+    }
+
+    @Test
+    void decrementStock_Success() {
+        when(mongoTemplate.findAndModify(any(), any(), eq(Product.class))).thenReturn(testProduct);
+
+        assertDoesNotThrow(() -> productService.decrementStock("prod123", 3));
+        verify(mongoTemplate).findAndModify(any(), any(), eq(Product.class));
+    }
+
+    @Test
+    void decrementStock_InsufficientStock_ThrowsException() {
+        when(mongoTemplate.findAndModify(any(), any(), eq(Product.class))).thenReturn(null);
+        when(productRepository.existsById("prod123")).thenReturn(true);
+
+        assertThatThrownBy(() -> productService.decrementStock("prod123", 15))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Insufficient stock");
+    }
+
+    @Test
+    void decrementStock_ProductNotFound_ThrowsException() {
+        when(mongoTemplate.findAndModify(any(), any(), eq(Product.class))).thenReturn(null);
+        when(productRepository.existsById("prod123")).thenReturn(false);
+
+        assertThatThrownBy(() -> productService.decrementStock("prod123", 1))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Product not found");
     }
 }
