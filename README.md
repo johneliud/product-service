@@ -5,8 +5,8 @@ Microservice responsible for product management and catalog operations.
 ## Overview
 
 - **Port**: 8082
-- **Technology**: Spring Boot 3.x
-- **Database**: MongoDB collection `products`
+- **Technology**: Spring Boot 4.0.3
+- **Database**: MongoDB Atlas (collection `products`)
 - **Purpose**: Product CRUD, filtering, sorting, and pagination
 
 ## Features
@@ -169,20 +169,18 @@ Examples:
 
 ## Dependencies
 
-- Spring Boot 3.x
+- Spring Boot 4.0.3
 - Spring Data MongoDB
-- Spring Kafka
+- Spring Kafka 4.0.3
 - Lombok
 - Validation API
 
 ## Kafka Integration
 
-### Producer Configuration
-Publishes events to Kafka when products are deleted.
+### Producer
+Publishes to `product-deleted` when a seller deletes a product.
 
-**Topic**: `product-deleted`
-
-**Event Structure**:
+**Event**:
 ```json
 {
   "productId": "string",
@@ -190,11 +188,16 @@ Publishes events to Kafka when products are deleted.
 }
 ```
 
-### Configuration
+Producer configuration includes `RETRIES_CONFIG = 3` and `RETRY_BACKOFF_MS_CONFIG = 1000ms`.
+
+### Consumer
+Subscribes to `order-placed` (consumer group: `product-service`) to update stock counters.
+
+Consumer configuration uses `StringDeserializer` + `StringJsonMessageConverter` with `DefaultErrorHandler(FixedBackOff(1000ms, 3 retries))`.
+
 ```properties
 spring.kafka.bootstrap-servers=localhost:9092
-spring.kafka.producer.key-serializer=org.apache.kafka.common.serialization.StringSerializer
-spring.kafka.producer.value-serializer=org.springframework.kafka.support.serializer.JsonSerializer
+spring.kafka.consumer.group-id=product-service
 ```
 
 ## Error Responses
