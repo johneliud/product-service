@@ -16,6 +16,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 
@@ -47,17 +48,6 @@ public class ProductService {
         log.info("Product created successfully with ID: {} for userId: {}", savedProduct.getId(), userId);
 
         return toProductResponse(savedProduct);
-    }
-
-    public List<ProductResponse> getAllProducts() {
-        log.info("Fetching all products");
-
-        List<Product> products = productRepository.findAll();
-
-        log.info("Retrieved {} products", products.size());
-        return products.stream()
-                .map(this::toProductResponse)
-                .collect(Collectors.toList());
     }
 
     public PagedResponse<ProductResponse> getAllProductsPaged(
@@ -200,6 +190,28 @@ public class ProductService {
                 productPage.getTotalPages(),
                 productPage.isLast()
         );
+    }
+
+    public void decrementStock(String productId, int quantity) {
+        log.info("Attempting to decrement stock for productId: {} by {}", productId, quantity);
+
+        Query query = Query.query(
+                Criteria.where("_id").is(productId).and("quantity").gte(quantity)
+        );
+        Update update = new Update().inc("quantity", -quantity);
+        Product previous = mongoTemplate.findAndModify(query, update, Product.class);
+
+        if (previous == null) {
+            boolean exists = productRepository.existsById(productId);
+            if (!exists) {
+                log.warn("Stock decrement failed: product not found - {}", productId);
+                throw new IllegalArgumentException("Product not found: " + productId);
+            }
+            log.warn("Stock decrement failed: insufficient stock for productId: {}, requested: {}", productId, quantity);
+            throw new IllegalArgumentException("Insufficient stock for product: " + productId);
+        }
+
+        log.info("Stock decremented for productId: {} by {}. Previous quantity: {}", productId, quantity, previous.getQuantity());
     }
 
     private Query buildFilterQuery(String search, BigDecimal minPrice, BigDecimal maxPrice,
