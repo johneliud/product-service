@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Component;
+import tools.jackson.databind.ObjectMapper;
 
 @Component
 @RequiredArgsConstructor
@@ -12,8 +13,17 @@ import org.springframework.stereotype.Component;
 public class OrderStatusChangedEventListener {
 
     private final ProductService productService;
+    private final ObjectMapper objectMapper;
 
     @KafkaListener(topics = "order-status-changed", groupId = "product-service")
+    public void onOrderStatusChangedMessage(String message) {
+        try {
+            onOrderStatusChanged(objectMapper.readValue(message, OrderStatusChangedEvent.class));
+        } catch (Exception e) {
+            log.error("Failed to deserialize order-status-changed event: {}", e.getMessage());
+        }
+    }
+
     public void onOrderStatusChanged(OrderStatusChangedEvent event) {
         if (!"DELIVERED".equals(event.getNewStatus())) {
             return;
