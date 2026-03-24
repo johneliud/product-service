@@ -134,7 +134,7 @@ This triggers a Kafka event that notifies Media Service to delete associated med
 ### Application Properties
 ```properties
 server.port=8082
-spring.data.mongodb.uri=mongodb://localhost:27017/buy01
+spring.mongodb.uri=mongodb://localhost:27017/buy01
 ```
 
 ## Running the Service
